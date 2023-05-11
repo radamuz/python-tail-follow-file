@@ -4,6 +4,8 @@ import threading
 import subprocess
 from collections import deque
 
+file_path = "text.txt"
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
 socketio = SocketIO(app)
@@ -17,7 +19,7 @@ def index():
     return render_template('index.html')
 
 def send_message():
-    command = 'tail -f text.txt'
+    command = f'tail -f {file_path}'
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     while True:
@@ -37,7 +39,7 @@ def handle_connect():
     connected = True  # Establecer la variable global en True cuando se conecta el socket
 
     # Enviar las primeras líneas del archivo
-    with open('text.txt', 'r') as file:
+    with open(file_path, 'r') as file:
         lines = file.readlines()
         for line in lines:
             socketio.emit('message', line.strip())
@@ -55,4 +57,4 @@ def handle_disconnect():
 
 # Iniciar la aplicación Flask con SocketIO
 if __name__ == '__main__':
-    socketio.run(app)
+    socketio.run(app, host="0.0.0.0")
