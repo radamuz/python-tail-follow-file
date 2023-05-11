@@ -35,6 +35,11 @@
             consoleElement.appendChild(outputElement);
             consoleElement.scrollTop = consoleElement.scrollHeight;  // Hacer scroll hacia abajo automáticamente
         });
+
+        // Cerrar la conexión del socket cuando se cierre la pestaña
+        window.addEventListener('beforeunload', function() {
+            socket.disconnect();
+        });        
     </script>
 </head>
 <body>
