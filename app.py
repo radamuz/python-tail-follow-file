@@ -1,10 +1,8 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-import time
 import threading
 import subprocess
-import json
-import tailer
+from collections import deque
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
@@ -16,10 +14,29 @@ def index():
     return render_template('index.html')
 
 def send_message():
-    # process = subprocess.Popen(['tail', '-f', 'text.txt'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    for line in tailer.follow(open('text.txt')):
-        socketio.emit('message', line.strip())
+    with open('text.txt', 'r') as file:
+        buffer = deque(maxlen=10)  # Crear un búfer de longitud máxima 10
+        for line in file:
+            buffer.append(line.strip())  # Agregar cada línea al búfer
+            if len(buffer) == 10:
+                # Una vez que el búfer esté lleno, comenzar a emitir las líneas
+                for line_to_emit in buffer:
+                    socketio.emit('message', line_to_emit)
+                buffer.clear()  # Limpiar el búfer
 
+        # Después de procesar todas las líneas del archivo, emitir las líneas restantes en el búfer
+        for line_to_emit in buffer:
+            socketio.emit('message', line_to_emit)
+
+    command = 'tail -f text.txt'
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    while True:
+        output = process.stdout.readline().decode().strip()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            socketio.emit('message', output)
 
 # Ruta para la conexión del socket
 @socketio.on('connect')
