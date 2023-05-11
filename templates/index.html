@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tail -f Web Console</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: monospace;
+            padding: 10px;
+        }
+        #console {
+            width: 100%;
+            height: 400px;
+            overflow-y: scroll;
+            border: 1px solid #fff;
+            padding: 10px;
+        }
+        .output {
+            white-space: pre;
+        }
+    </style>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.js"></script>
+    <script type="text/javascript">
+        // Conexión con el servidor de WebSocket
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        
+        // Manejar el evento 'message' recibido del servidor
+        socket.on('message', function(data) {
+            // Crear un elemento div para la salida y agregarlo al elemento 'console'
+            var outputElement = document.createElement('div');
+            outputElement.className = 'output';
+            outputElement.textContent = data;
+            var consoleElement = document.getElementById('console');
+            consoleElement.appendChild(outputElement);
+            consoleElement.scrollTop = consoleElement.scrollHeight;  // Hacer scroll hacia abajo automáticamente
+        });
+    </script>
+</head>
+<body>
+    <h1>Tail -f Web Console</h1>
+    <div id="console"></div>
+</body>
+</html>
