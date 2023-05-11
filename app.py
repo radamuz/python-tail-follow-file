@@ -17,20 +17,6 @@ def index():
     return render_template('index.html')
 
 def send_message():
-    with open('text.txt', 'r') as file:
-        buffer = deque(maxlen=10)  # Crear un búfer de longitud máxima 10
-        for line in file:
-            buffer.append(line.strip())  # Agregar cada línea al búfer
-            if len(buffer) == 10:
-                # Una vez que el búfer esté lleno, comenzar a emitir las líneas
-                for line_to_emit in buffer:
-                    socketio.emit('message', line_to_emit)
-                buffer.clear()  # Limpiar el búfer
-
-        # Después de procesar todas las líneas del archivo, emitir las líneas restantes en el búfer
-        for line_to_emit in buffer:
-            socketio.emit('message', line_to_emit)
-
     command = 'tail -f text.txt'
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -49,6 +35,12 @@ def send_message():
 def handle_connect():
     global connected, send_thread
     connected = True  # Establecer la variable global en True cuando se conecta el socket
+
+    # Enviar las primeras líneas del archivo
+    with open('text.txt', 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            socketio.emit('message', line.strip())
 
     if send_thread is None or not send_thread.is_alive():
         # Si no hay un hilo en ejecución, o el hilo anterior ha finalizado, crear uno nuevo
