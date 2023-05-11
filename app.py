@@ -16,6 +16,8 @@ last_modified_time = None  # Último tiempo de modificación del archivo
 lines_sent = set()  # Conjunto de líneas ya enviadas
 
 def send_message():
+    global last_modified_time
+
     while True:
         if not connected:
             break
